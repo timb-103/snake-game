@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake</title>
+  <link id="favicon" rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      box-sizing: border-box;
+      height: 100vh;
+      background-color: #9ead86;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .start-screen {
+      text-align: center;
+    }
+
+    .start-screen h1 {
+      font-size: 2.5rem;
+      color: #494f42;
+      margin-bottom: 1rem;
+    }
+
+    .start-button {
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      background-color: #494f42;
+      color: #9ead86;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .start-button:hover {
+      background-color: #5a6152;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(20, 15px);
+      grid-template-rows: repeat(20, 15px);
+      gap: 1px;
+      background-color: #879372;
+      border: 10px solid #494f42;
+      border-radius: 5px;
+    }
+
+    .cell {
+      width: 15px;
+      height: 15px;
+      background-color: #9ead86;
+    }
+
+    .snake {
+      background-color: #000000;
+      border-radius: 2px;
+    }
+
+    .food {
+      background-color: #000000;
+      border-radius: 50%;
+    }
+
+    .game-info {
+      margin-top: 20px;
+      text-align: center;
+      color: #494f42;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" @vue:mounted="mounted">
+    <div class="game-container" @keydown="handleKeydown" @touchstart="handleTouchStart" @touchend="handleTouchEnd"
+      tabindex="0">
+      <div class="start-screen">
+        <h1>Snake Game</h1>
+      </div>
+      <div>
+        <div class="game-board">
+          <div v-for="(cell, index) in getCells()" :key="index"
+            :class="['cell', { 'snake': isSnakeCell(index), 'food': isFoodCell(index) }]"></div>
+        </div>
+        <div class="game-info">
+          <p>Score: {{ state.score }}</p>
+          <p>High Score: {{ state.highScore }}</p>
+          <p v-if="state.gameOver" @click="restartGame">Game Over! Tap to restart.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script type="module">
+    import { createApp, reactive } from 'https://unpkg.com/petite-vue?module'
+
+    const GRID_SIZE = 20
+    const CELL_SIZE = 15
+
+    const state = reactive({
+      snake: [{ x: 10, y: 10 }],
+      food: { x: 0, y: 0 },
+      direction: { x: 1, y: 0 },
+      gameOver: false,
+      score: 0,
+      gameStarted: false,
+      highScore: 0,
+    })
+
+    let gameLoop
+    let touchStartPos
+
+    function getRandomPosition() {
+      return {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE)
+      }
+    }
+
+    function indexToPosition(index) {
+      return {
+        x: index % GRID_SIZE,
+        y: Math.floor(index / GRID_SIZE)
+      }
+    }
+
+    function moveSnake() {
+      if (state.gameOver) return
+
+      const head = { ...state.snake[0] }
+      head.x = (head.x + state.direction.x + GRID_SIZE) % GRID_SIZE
+      head.y = (head.y + state.direction.y + GRID_SIZE) % GRID_SIZE
+
+      if (state.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        state.gameOver = true
+        updateHighScore()
+        return
+      }
+
+      state.snake.unshift(head)
+
+      if (head.x === state.food.x && head.y === state.food.y) {
+        state.score++
+        updateHighScore()
+        state.food = getRandomPosition()
+      } else {
+        state.snake.pop()
+      }
+    }
+
+    function handleKeydown(event) {
+      const keyDirections = {
+        ArrowUp: { x: 0, y: -1 },
+        ArrowDown: { x: 0, y: 1 },
+        ArrowLeft: { x: -1, y: 0 },
+        ArrowRight: { x: 1, y: 0 }
+      }
+
+      const newDirection = keyDirections[event.key]
+      if (newDirection && !isOppositeDirection(newDirection)) {
+        state.direction = newDirection
+      }
+    }
+
+    function isOppositeDirection(newDir) {
+      return (newDir.x === -state.direction.x && newDir.y === -state.direction.y)
+    }
+
+    function handleTouchStart(event) {
+      touchStartPos = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      }
+    }
+
+    function handleTouchEnd(event) {
+      const touchEndPos = {
+        x: event.changedTouches[0].clientX,
+        y: event.changedTouches[0].clientY
+      }
+
+      const deltaX = touchEndPos.x - touchStartPos.x
+      const deltaY = touchEndPos.y - touchStartPos.y
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        const newDirection = deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 }
+        if (!isOppositeDirection(newDirection)) {
+          state.direction = newDirection
+        }
+      } else {
+        const newDirection = deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 }
+        if (!isOppositeDirection(newDirection)) {
+          state.direction = newDirection
+        }
+      }
+    }
+
+    function isSnakeCell(index) {
+      const { x, y } = indexToPosition(index)
+      return state.snake.some(segment => segment.x === x && segment.y === y)
+    }
+
+    function isFoodCell(index) {
+      const { x, y } = indexToPosition(index)
+      return state.food.x === x && state.food.y === y
+    }
+
+    function getCells() {
+      return Array(GRID_SIZE * GRID_SIZE).fill(null)
+    }
+
+    function updateHighScore() {
+      if (state.score > state.highScore) {
+        state.highScore = state.score
+        localStorage.setItem('snakeHighScore', state.highScore)
+      }
+    }
+
+    function startGame() {
+      if (state.gameStarted) return
+
+      state.snake = [{ x: 10, y: 10 }]
+      state.food = getRandomPosition()
+      state.direction = { x: 1, y: 0 }
+      state.gameOver = false
+      state.score = 0
+      state.highScore = parseInt(localStorage.getItem('snakeHighScore') || '0')
+      state.gameStarted = true
+
+      gameLoop = setInterval(moveSnake, 100)
+    }
+
+    function stopGame() {
+      clearInterval(gameLoop)
+      state.gameStarted = false
+    }
+
+    function restartGame() {
+      stopGame()
+      startGame()
+    }
+
+    createApp({
+      state,
+      getCells,
+      handleKeydown,
+      handleTouchStart,
+      handleTouchEnd,
+      isSnakeCell,
+      isFoodCell,
+      startGame,
+      stopGame,
+      restartGame,
+      updateHighScore,
+      mounted() {
+        this.startGame();
+
+        const el = document.getElementsByClassName('game-container')[0];
+        el.focus();
+      }
+    }).mount()
+  </script>
+</body>
+
+</html>
