@@ -83,6 +83,12 @@
       font-size: 18px;
       font-weight: bold;
     }
+
+    @media (min-width: 500px) {
+      .swipe-info {
+        display: none;
+      }
+    }
   </style>
 </head>
 
@@ -99,6 +105,7 @@
             :class="['cell', { 'snake': isSnakeCell(index), 'food': isFoodCell(index) }]"></div>
         </div>
         <div class="game-info">
+          <p class="swipe-info"><small>swipe to move</small></p>
           <p>Score: {{ state.score }}</p>
           <p>High Score: {{ state.highScore }}</p>
           <p v-if="state.gameOver" @click="restartGame">Game Over! Tap to restart.</p>
