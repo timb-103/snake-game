@@ -35,7 +35,7 @@
       margin-bottom: 1rem;
     }
 
-    .start-button {
+    .button {
       font-size: 1.2rem;
       padding: 0.5rem 1rem;
       background-color: #494f42;
@@ -46,7 +46,7 @@
       margin-top: 20px;
     }
 
-    .start-button:hover {
+    .button:hover {
       background-color: #5a6152;
     }
 
@@ -108,7 +108,7 @@
           <p class="swipe-info"><small>swipe to move</small></p>
           <p>Score: {{ state.score }}</p>
           <p>High Score: {{ state.highScore }}</p>
-          <p v-if="state.gameOver" @click="restartGame">Game Over! Tap to restart.</p>
+          <button v-if="state.gameOver" class="button" @click="restartGame">Game Over! Tap to restart.</button>
         </div>
       </div>
     </div>
