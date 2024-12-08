@@ -184,6 +184,7 @@
     }
 
     function handleTouchStart(event) {
+      event.preventDefault();
       touchStartPos = {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY
@@ -191,6 +192,7 @@
     }
 
     function handleTouchEnd(event) {
+      event.preventDefault();
       const touchEndPos = {
         x: event.changedTouches[0].clientX,
         y: event.changedTouches[0].clientY
