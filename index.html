@@ -83,6 +83,45 @@
       font-size: 18px;
       font-weight: bold;
     }
+
+    .mobile-controls {
+      display: none;
+    }
+
+    @media (max-width: 500px) {
+      .mobile-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+      }
+
+      .control-row {
+        display: flex;
+      }
+
+      .control-button {
+        width: 50px;
+        height: 50px;
+        margin: 5px;
+        background-color: #494f42;
+        color: #9ead86;
+        font-size: 1.2rem;
+        text-align: center;
+        line-height: 50px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .control-button:hover {
+        background-color: #5a6152;
+      }
+    }
   </style>
 </head>
 
@@ -103,6 +142,18 @@
           <p>High Score: {{ state.highScore }}</p>
           <p v-if="state.gameOver" @click="restartGame">Game Over! Tap to restart.</p>
         </div>
+        <div class="mobile-controls">
+          <div class="control-row">
+            <button class="control-button" @click="setDirection(0, -1)">↑</button>
+          </div>
+          <div class="control-row">
+            <button class="control-button" @click="setDirection(-1, 0)">←</button>
+            <button class="control-button" @click="setDirection(1, 0)">→</button>
+          </div>
+          <div class="control-row">
+            <button class="control-button" @click="setDirection(0, 1)">↓</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -112,7 +163,6 @@
     import { createApp, reactive } from 'https://unpkg.com/petite-vue?module'
 
     const GRID_SIZE = 20
-    const CELL_SIZE = 15
 
     const state = reactive({
       snake: [{ x: 10, y: 10 }],
@@ -181,6 +231,13 @@
 
     function isOppositeDirection(newDir) {
       return (newDir.x === -state.direction.x && newDir.y === -state.direction.y)
+    }
+
+    function setDirection(x, y) {
+      const newDirection = { x, y }
+      if (!isOppositeDirection(newDirection)) {
+        state.direction = newDirection
+      }
     }
 
     function handleTouchStart(event) {
@@ -265,6 +322,7 @@
       handleKeydown,
       handleTouchStart,
       handleTouchEnd,
+      setDirection,
       isSnakeCell,
       isFoodCell,
       startGame,
